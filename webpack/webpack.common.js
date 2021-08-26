@@ -6,7 +6,7 @@ const loaders = require('./loaders');
 const plugins = require('./plugins');
 
 module.exports = {
-  entry: ['./src/js/COMPONENT.js'],
+  entry: ['./src/js/GrandeBocce.js'],
   module: {
     rules: [
       loaders.JSLoader,
@@ -14,11 +14,11 @@ module.exports = {
     ]
   },
   output: {
-    filename: 'COMPONENT.bundle.js',
+    filename: 'GrandeBocce.bundle.js',
     path: path.resolve(__dirname, '../dist'),
-    library: 'COMPONENT', // We set a library name to bundle the export default of the class
+    library: 'GrandeBocce', // We set a library name to bundle the export default of the class
     libraryTarget: 'window', // Make it globally available
-    libraryExport: 'default' // Make COMPONENT.default become COMPONENT
+    libraryExport: 'default' // Make GrandeBocce.default become GrandeBocce
   },
   plugins: [
     new webpack.ProgressPlugin(),

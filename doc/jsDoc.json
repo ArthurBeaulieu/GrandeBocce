@@ -13,8 +13,8 @@
     "dictionaries": ["jsdoc", "closure"]
   },
   "templates": {
-    "name": "COMPONENT",
-    "footerText": "COMPONENT",
+    "name": "GrandeBocce",
+    "footerText": "GrandeBocce",
     "cleverLinks": false,
     "monospaceLinks": false
   },
