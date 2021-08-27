@@ -1,6 +1,6 @@
 import CustomEvents from '../lib/CustomEvents';
 import BocceGame from './BocceGame';
-import BocceTournament from './BocceTournament';
+//import BocceTournament from './BocceTournament';
 import Utils from './Utils';
 import '../scss/GrandeBocce.scss';
 
@@ -179,5 +179,5 @@ class GrandeBocce {
 
 
 window.Bocce = new GrandeBocce();
-Bocce.init();
+window.Bocce.init();
 export default GrandeBocce;

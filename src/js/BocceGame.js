@@ -24,13 +24,13 @@ class BocceGame {
 		return new Promise(resolve => {
 			const bowlsAmount = (this._type === '3v3') ? 2 : 3;
 			const startingTeam = (Math.floor(Math.random() * 10) > 4) ? 1 : 2;
-			const oldStyle = Bocce.scene.style;
+			const oldStyle = window.Bocce.scene.style;
 
-			Bocce.scene.style = 'align-items:center;display:flex;font-size:1.1rem;height:100vh;justify-content:center;padding:1rem;text-align:center;';
-			Bocce.scene.innerHTML = `Que chaque joueur se munisse de ${bowlsAmount} boules. C'est à l'équipe ${startingTeam} de commencer, plus précisément de lancer le but et sa première boule.`;
+			window.Bocce.scene.style = 'align-items:center;display:flex;font-size:1.1rem;height:100vh;justify-content:center;padding:1rem;text-align:center;';
+			window.Bocce.scene.innerHTML = `Que chaque joueur se munisse de ${bowlsAmount} boules. C'est à l'équipe ${startingTeam} de commencer, plus précisément de lancer le but et sa première boule.`;
 
 			setTimeout(() => {
-				Bocce.scene.style = oldStyle;
+				window.Bocce.scene.style = oldStyle;
 				resolve();
 			}, 6000);
 		});
