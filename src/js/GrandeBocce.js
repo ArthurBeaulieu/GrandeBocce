@@ -8,7 +8,6 @@ class GrandeBocce {
 	constructor() {
 		this._scene = null;
 		this._evts = new CustomEvents();
-
 		this._evtsIds = [];
 
 		this._init();
@@ -25,58 +24,62 @@ class GrandeBocce {
 
 
 	_homePage() {
-		this._clearEvents();
 		this._fetchTemplate('src/html/home.html')
-			.then(data => {
-				this._scene.innerHTML = '';
-		    this._scene.appendChild(this._parseTemplate(data));
-		    this._evtsIds.push(this._evts.addEvent('click', document.getElementById('new-game'), this._newGamePage, this));
-		    this._evtsIds.push(this._evts.addEvent('click', document.getElementById('scoreboard'), this._scoreBoardPage, this));
-		    this._evtsIds.push(this._evts.addEvent('click', document.getElementById('stats'), this._statsPage, this));
-		    this._evtsIds.push(this._evts.addEvent('click', document.getElementById('rules'), this._rulesPage, this));
+			.then(() => {
+				this._evtsIds.push(this._evts.addEvent('click', document.getElementById('new-game'), this._newGamePage, this));
+				this._evtsIds.push(this._evts.addEvent('click', document.getElementById('scoreboard'), this._scoreBoardPage, this));
+				this._evtsIds.push(this._evts.addEvent('click', document.getElementById('stats'), this._statsPage, this));
+				this._evtsIds.push(this._evts.addEvent('click', document.getElementById('rules'), this._rulesPage, this));
 			})
 			.catch(err => console.log('Failed to retrieve homepage html content.', err));	
 	}
 
 
 	_newGamePage() {
-		this._clearEvents();
+		this._fetchTemplate('src/html/game.html')
+			.then(() => {
+				this._evtsIds.push(this._evts.addEvent('click', document.getElementById('1v1'), this._startNewGame, this));				
+				this._evtsIds.push(this._evts.addEvent('click', document.getElementById('2v2'), this._startNewGame, this));				
+				this._evtsIds.push(this._evts.addEvent('click', document.getElementById('3v3'), this._startNewGame, this));				
+				this._evtsIds.push(this._evts.addEvent('click', document.getElementById('homepage'), this._homePage, this));				
+			})
+			.catch(err => console.log('Failed to retrieve game html content.', err));	
 	}
 
 
 	_scoreBoardPage() {
-		this._clearEvents();
 		this._fetchTemplate('src/html/scoreboard.html')
-			.then(data => {
-				this._scene.innerHTML = '';
-		    this._scene.appendChild(this._parseTemplate(data));
-		    this._evtsIds.push(this._evts.addEvent('click', document.getElementById('homepage'), this._homePage, this));		    
+			.then(() => {
+				this._evtsIds.push(this._evts.addEvent('click', document.getElementById('homepage'), this._homePage, this));		    
 			})
 			.catch(err => console.log('Failed to retrieve scoreboard html content.', err));	
 	}
 
 
 	_statsPage() {
-		this._clearEvents();
 		this._fetchTemplate('src/html/stats.html')
-			.then(data => {
-				this._scene.innerHTML = '';
-		    this._scene.appendChild(this._parseTemplate(data));
-		    this._evtsIds.push(this._evts.addEvent('click', document.getElementById('homepage'), this._homePage, this));		    
+			.then(() => {
+				this._evtsIds.push(this._evts.addEvent('click', document.getElementById('homepage'), this._homePage, this));		    
 			})
 			.catch(err => console.log('Failed to retrieve stats html content.', err));	
 	}
 
 
 	_rulesPage() {
-		this._clearEvents();
 		this._fetchTemplate('src/html/rules.html')
-			.then(data => {
-				this._scene.innerHTML = '';
-		    this._scene.appendChild(this._parseTemplate(data));
-		    this._evtsIds.push(this._evts.addEvent('click', document.getElementById('homepage'), this._homePage, this));		    
+			.then(() => {
+				this._evtsIds.push(this._evts.addEvent('click', document.getElementById('homepage'), this._homePage, this));		    
 			})
 			.catch(err => console.log('Failed to retrieve rules html content.', err));		
+	}
+
+
+	/* Game routines */
+
+
+	_startNewGame(e) {
+		this._clearEvents();		
+		console.log(e)
 	}
 
 
@@ -92,8 +95,16 @@ class GrandeBocce {
 
 	_fetchTemplate(url) {
 		return new Promise((resolve, reject) => {
+			this._clearEvents();
 			fetch(url)
-				.then(data => resolve(data.text()))
+				.then(data => {
+					data.text().then(htmlString => {
+						this._scene.innerHTML = '';
+						this._scene.appendChild(this._parseTemplate(htmlString));					
+						resolve();
+					})
+					.catch(reject);
+				})
 				.catch(reject);
 		});
 	}
@@ -102,7 +113,7 @@ class GrandeBocce {
 	_parseTemplate(htmlString) {
 		const parser = new DOMParser();
     const dom = parser.parseFromString(htmlString, 'text/html');
-    return dom.body;
+    return dom.body.firstChild;
 	}
 
 

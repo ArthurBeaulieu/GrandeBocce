@@ -6,13 +6,26 @@
 html, body {
 	color: white;
 	font-family: sans-serif;
-	height: 100vh;
+	height: auto;
 	width: 100vw;
 }
 
 body {
-	background: rgb(88, 88, 88);
-	height: 62.5%;
+	background-image: linear-gradient(#3C405D, #060609 85%);
+	font-size: 62.5%;
+}
+
+h1 {
+	font-size: 2.8rem;
+}
+
+p {
+	font-size: 1rem;
+}
+
+main,
+main div {
+	height: auto;
 }
 
 nav {
@@ -23,21 +36,21 @@ nav {
 	width: 100%;
 }
 
-section.home {
+section.home,
+section.new-game {
 	align-items: center;
 	display: flex;
 	flex-direction: column;
-	height: 100vh;
+	height: calc(100vh - 5rem - 11rem);
 	justify-content: center;
-	position: absolute;
-	top: 0;
 	width: 100vw;
 }
 
-footer.home {
+footer.home,
+footer.new-game {
 	bottom: 0;
-	padding-bottom: 1rem;
-	position: absolute;
+	height: 10rem;
+	margin-bottom: 1rem;
 	text-align: center;
 	width: 100vw;
 
@@ -47,8 +60,13 @@ footer.home {
 	}
 }
 
+nav.rules {
+	height: 6rem;
+	padding-bottom: 1rem;
+}
+
 section.rules {
-	padding: 0 2rem;
+	padding: 0 2rem 1rem;	
 	text-align: justify;
 
 	p {
@@ -69,8 +87,8 @@ footer.rules {
 }
 
 button {
-	background-color: red;
-	border: solid 1px grey;
+	background-color: rgba(255, 235, 235, .2);
+	border: solid 1px rgb(127, 127, 127);
 	border-radius: .5rem;
 	color: white;
 	font-weight: bold;
