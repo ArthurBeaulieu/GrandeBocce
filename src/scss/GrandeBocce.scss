@@ -79,11 +79,73 @@ section.rules {
 	}
 }
 
+footer.players,
+footer.newtournament,
 footer.scoreboard,
 footer.stats,
 footer.rules {
 	display: flex;
 	justify-content: center;
+}
+
+section.players {
+	display: flex;
+	flex-direction: column;
+	height: calc(100vh - 5rem - 11rem);	
+	justify-content: center;
+}
+
+section.team {
+	background: rgba(255, 235, 235, .2);
+	border-radius: .5rem;
+	margin: 1rem;
+	padding: 1rem;
+	text-align: center;
+
+	&:nth-child(2n + 1) {
+		background: rgba(3, 252, 248, .2);
+	}
+
+	&:nth-child(2n) {
+		background: rgba(255, 77, 77, .4);
+	}
+
+	h2 {
+		margin-bottom: 1rem;
+	}
+
+	div.player {
+		align-items: center;
+		display: flex;
+		height: auto;
+		justify-content: center;
+		margin-bottom: 1rem;
+
+		p {
+			font-size: 1.33rem;			
+			font-weight: bold;
+		}
+
+		input {
+			background: transparent;
+			border: solid 1px rgb(127, 127, 127);
+			border-radius: .2rem;
+			color: white;
+			padding: .5rem;
+			margin: 0 1rem;
+			text-align: center;
+		}
+
+		img {
+			height: 1.33rem;
+		}
+	}
+}
+
+footer.players {
+	align-items: center;
+	flex-direction: column;
+	height: 11rem;
 }
 
 button {
@@ -92,6 +154,6 @@ button {
 	border-radius: .5rem;
 	color: white;
 	font-weight: bold;
-	margin: 1.5rem 0;
+	margin: 1rem 0;
 	padding: 1rem 2rem;
 }
