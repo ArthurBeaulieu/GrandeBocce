@@ -79,11 +79,97 @@ section.rules {
 	}
 }
 
+nav.mene {
+	flex-direction: column;
+	height: 14rem;
+	padding: 0 1rem;
+	text-align: center;
+
+	h2 {
+		font-size: 1.4rem;
+		margin-bottom: 1rem;
+	}
+
+	p {
+		margin-bottom: 1rem;
+
+		&:first-child,
+		&:last-child {
+			margin-bottom: 0;
+		}
+	}
+}
+
+section.mene {
+	height: calc(100vh - 14rem);
+
+	section.team {
+		&.disabled {
+			opacity: 0.5;
+			pointer-events: none;
+		}
+
+		h2 {
+			margin-bottom: 0;
+		}
+
+		h4 {
+			margin-bottom: 1rem;
+		}
+
+		.player {
+			align-items: center;
+			border: solid 1px gray;
+			border-radius: 5px;
+			display: grid;
+			grid-template-columns: 50% 1fr 1fr 1fr 1fr;
+			justify-items: center;
+			padding: .5rem;		
+
+			&.disabled {
+				opacity: 0.5;
+				pointer-events: none;
+			}
+		
+			div {
+				position: relative;
+
+				&::before {
+					bottom: -.3rem;
+					color: green;
+					content: attr(data-value);
+					right: -.5rem;
+					position: absolute;
+				}
+
+				img {
+					height: 1.33rem;
+				}
+			}
+		}	
+	}
+}
+
+section.endgame {
+	align-items: center;
+	display: flex;
+	flex-direction: column;
+	height: calc(100vh - 5rem - 5rem);
+	justify-content: center;
+	padding: 1em;
+
+	p {
+		font-size: 1.1rem;
+		margin-bottom: 1rem;
+	}
+}
+
 footer.players,
 footer.newtournament,
 footer.scoreboard,
 footer.stats,
-footer.rules {
+footer.rules,
+footer.endgame {
 	display: flex;
 	justify-content: center;
 }

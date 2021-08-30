@@ -10,8 +10,8 @@ class GrandeBocce {
 
 	constructor() {
 		this.scene = null;
-		this._evts = new CustomEvents();
-		this._evtsIds = [];
+		this.evts = new CustomEvents();
+		this.evtsIds = [];
 		this._game = null;
 		this._tournament = null;
 	}
@@ -19,21 +19,21 @@ class GrandeBocce {
 
 	init() {
 		this.scene = document.getElementById('app-scene');
-		this._homePage();
+		this.homePage();
 	}
 
 
 	/* Pages */
 
 
-	_homePage() {
+	homePage() {
 		Utils.fetchTemplate('src/html/home.html')
 			.then(() => {
-				this._evtsIds.push(this._evts.addEvent('click', document.getElementById('new-game'), this._newGamePage, this));
-				this._evtsIds.push(this._evts.addEvent('click', document.getElementById('new-tournament'), this._newTournamenPage, this));
-				this._evtsIds.push(this._evts.addEvent('click', document.getElementById('scoreboard'), this._scoreBoardPage, this));
-				this._evtsIds.push(this._evts.addEvent('click', document.getElementById('stats'), this._statsPage, this));
-				this._evtsIds.push(this._evts.addEvent('click', document.getElementById('rules'), this._rulesPage, this));
+				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('new-game'), this._newGamePage, this));
+				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('new-tournament'), this._newTournamenPage, this));
+				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('scoreboard'), this._scoreBoardPage, this));
+				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('stats'), this._statsPage, this));
+				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('rules'), this._rulesPage, this));
 			})
 			.catch(err => console.log('Failed to retrieve home html content.', err));	
 	}
@@ -42,10 +42,10 @@ class GrandeBocce {
 	_newGamePage() {
 		Utils.fetchTemplate('src/html/newgame.html')
 			.then(() => {
-				this._evtsIds.push(this._evts.addEvent('click', document.getElementById('1v1'), this._startNewGame, this));
-				this._evtsIds.push(this._evts.addEvent('click', document.getElementById('2v2'), this._startNewGame, this));
-				this._evtsIds.push(this._evts.addEvent('click', document.getElementById('3v3'), this._startNewGame, this));
-				this._evtsIds.push(this._evts.addEvent('click', document.getElementById('homepage'), this._homePage, this));
+				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('1v1'), this._startNewGame, this));
+				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('2v2'), this._startNewGame, this));
+				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('3v3'), this._startNewGame, this));
+				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('homepage'), this.homePage, this));
 			})
 			.catch(err => console.log('Failed to retrieve newgame html content.', err));	
 	}
@@ -54,7 +54,7 @@ class GrandeBocce {
 	_newTournamenPage() {
 		Utils.fetchTemplate('src/html/newtournament.html')
 			.then(() => {
-				this._evtsIds.push(this._evts.addEvent('click', document.getElementById('homepage'), this._homePage, this));
+				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('homepage'), this.homePage, this));
 			})
 			.catch(err => console.log('Failed to retrieve newtournament html content.', err));	
 	}
@@ -63,7 +63,7 @@ class GrandeBocce {
 	_scoreBoardPage() {
 		Utils.fetchTemplate('src/html/scoreboard.html')
 			.then(() => {
-				this._evtsIds.push(this._evts.addEvent('click', document.getElementById('homepage'), this._homePage, this));
+				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('homepage'), this.homePage, this));
 			})
 			.catch(err => console.log('Failed to retrieve scoreboard html content.', err));	
 	}
@@ -72,7 +72,7 @@ class GrandeBocce {
 	_statsPage() {
 		Utils.fetchTemplate('src/html/stats.html')
 			.then(() => {
-				this._evtsIds.push(this._evts.addEvent('click', document.getElementById('homepage'), this._homePage, this));
+				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('homepage'), this.homePage, this));
 			})
 			.catch(err => console.log('Failed to retrieve stats html content.', err));	
 	}
@@ -81,7 +81,7 @@ class GrandeBocce {
 	_rulesPage() {
 		Utils.fetchTemplate('src/html/rules.html')
 			.then(() => {
-				this._evtsIds.push(this._evts.addEvent('click', document.getElementById('homepage'), this._homePage, this));
+				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('homepage'), this.homePage, this));
 			})
 			.catch(err => console.log('Failed to retrieve rules html content.', err));		
 	}
@@ -93,10 +93,10 @@ class GrandeBocce {
 	_startNewGame(e) {
 		Utils.fetchTemplate('src/html/players.html')
 			.then(() => {
-				this._evtsIds.push(this._evts.addEvent('click', document.getElementById('homepage'), this._homePage, this));
+				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('homepage'), this.homePage, this));
 
 				const inputs = [];
-				const players = {
+				let players = {
 					a: [],
 					b: []
 				};
@@ -110,6 +110,10 @@ class GrandeBocce {
 							setTimeout(() => {
 								document.getElementById('startx').innerHTML = 'Démarrer la partie';
 							}, 2000);
+							players = {
+								a: [],
+								b: []
+							};					
 							break;
 						} else {
 							players[inputs[i].name[0]].push(inputs[i].value);
@@ -159,7 +163,7 @@ class GrandeBocce {
 					inputs.push(input);
 				}
 
-				this._evtsIds.push(this._evts.addEvent('click', document.getElementById('startx'), checkInputs, this));				
+				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('startx'), checkInputs, this));				
 			})
 			.catch(err => console.log('Failed to retrieve players html content.', err));
 	}
@@ -169,8 +173,8 @@ class GrandeBocce {
 
 
 	clearEvents() {
-		for (let i = 0; i < this._evtsIds.length; ++i) {
-			this._evts.removeEvent(this._evtsIds[i]);
+		for (let i = 0; i < this.evtsIds.length; ++i) {
+			this.evts.removeEvent(this.evtsIds[i]);
 		}
 	}
 

@@ -5,9 +5,9 @@
 ![Doc](https://badgen.net/badge/documentation/TODO/orange)
 ![Test](https://badgen.net/badge/test/TODO/orange)
 
-A bocce tournament handler for tons of fun.
+A bocce tournament handler for tons of fun. Made in French, because it's Bocce's homeland. If you require additionnal language, DM me :)
 
-[See it live](https://ArthurBeaulieu.github.io/GrandeBocce/demo/example.html) or [Read the documentation](https://ArthurBeaulieu.github.io/GrandeBocce/doc/index.html)
+[See it live](https://ArthurBeaulieu.github.io/GrandeBocce/index.html) or [Read the documentation](https://ArthurBeaulieu.github.io/GrandeBocce/doc/index.html)
 
 # Usage
 
