@@ -1,0 +1,15 @@
+@keyframes godown {
+  0% {
+    margin-bottom: 200px;
+    opacity: 0;
+  }
+
+  66% {
+ 		opacity: 0;
+  }
+
+  100% {
+    margin-bottom: 0;
+    opacity: 1;
+  }
+}

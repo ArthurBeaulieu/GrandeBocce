@@ -1,181 +1,158 @@
-import CustomEvents from '../lib/CustomEvents';
 import BocceGame from './BocceGame';
-//import BocceTournament from './BocceTournament';
 import Utils from './Utils';
+import CustomEvents from '../lib/CustomEvents';
 import '../scss/GrandeBocce.scss';
 
 
 class GrandeBocce {
 
 
+
 	constructor() {
 		this.scene = null;
-		this.evts = new CustomEvents();
-		this.evtsIds = [];
+		this.evts = null;
 		this._game = null;
-		this._tournament = null;
 	}
 
 
 	init() {
-		this.scene = document.getElementById('app-scene');
-		this.homePage();
+		this.scene = document.getElementById('app-container');
+		this.evts = new CustomEvents();
+		this.homepageView();
 	}
 
 
-	/* Pages */
+	/* Views */
 
 
-	homePage() {
-		Utils.fetchTemplate('src/html/home.html')
-			.then(() => {
-				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('new-game'), this._newGamePage, this));
-				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('new-tournament'), this._newTournamenPage, this));
-				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('scoreboard'), this._scoreBoardPage, this));
-				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('stats'), this._statsPage, this));
-				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('rules'), this._rulesPage, this));
-			})
-			.catch(err => console.log('Failed to retrieve home html content.', err));	
+	homepageView() {
+		return new Promise(resolve => {
+			Utils.fetchTemplate('assets/html/homepageview.html', 'home')
+				.then(() => {
+					Utils.dgid('text-header').innerHTML = 'GrandeBocce';					
+					this.evts.addEvent('click', Utils.dgid('new-game'), this.teamspageView, this);
+					this.evts.addEvent('click', Utils.dgid('rules'), this.rulespageView, this);
+					resolve();					
+				}).catch(this.fetchPageError);
+		});
 	}
 
 
-	_newGamePage() {
-		Utils.fetchTemplate('src/html/newgame.html')
-			.then(() => {
-				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('1v1'), this._startNewGame, this));
-				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('2v2'), this._startNewGame, this));
-				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('3v3'), this._startNewGame, this));
-				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('homepage'), this.homePage, this));
-			})
-			.catch(err => console.log('Failed to retrieve newgame html content.', err));	
+	teamspageView() {
+		return new Promise(resolve => {
+			Utils.fetchTemplate('assets/html/teamspageview.html', 'teams')
+				.then(() => {
+					Utils.dgid('text-header').innerHTML = 'Équipes';
+					this.evts.addEvent('click', Utils.dgid('1'), this.playerspageView, this);
+					this.evts.addEvent('click', Utils.dgid('2'), this.playerspageView, this);
+					this.evts.addEvent('click', Utils.dgid('3'), this.playerspageView, this);
+					this.evts.addEvent('click', Utils.dgid('homepage'), this.homepageView, this);
+					resolve();
+				}).catch(this.fetchPageError);
+		});
 	}
 
 
-	_newTournamenPage() {
-		Utils.fetchTemplate('src/html/newtournament.html')
-			.then(() => {
-				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('homepage'), this.homePage, this));
-			})
-			.catch(err => console.log('Failed to retrieve newtournament html content.', err));	
+	playerspageView(event) {
+		return new Promise(resolve => {
+			Utils.fetchTemplate('assets/html/playerspageview.html', 'players')
+				.then(() => {
+					Utils.dgid('text-header').innerHTML = 'Joueurs';
+					this.evts.addEvent('click', Utils.dgid('homepage'), this.homepageView, this);
+					// ID is held on button but click can occur on <i> or <b> inside button
+					this._fillPlayerspageView(parseInt(event.target.id) || parseInt(event.target.parentNode.id));
+					resolve();					
+				}).catch(this.fetchPageError);
+		});		
 	}
 
 
-	_scoreBoardPage() {
-		Utils.fetchTemplate('src/html/scoreboard.html')
-			.then(() => {
-				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('homepage'), this.homePage, this));
-			})
-			.catch(err => console.log('Failed to retrieve scoreboard html content.', err));	
+	rulespageView() {
+		return new Promise(resolve => {
+			Utils.fetchTemplate('assets/html/rulespageview.html', 'rules')
+				.then(() => {
+					Utils.dgid('text-header').innerHTML = 'Règles du jeu';
+					this.evts.addEvent('click', Utils.dgid('homepage'), this.homepageView, this);
+					resolve();					
+				}).catch(this.fetchPageError);
+		});
 	}
 
 
-	_statsPage() {
-		Utils.fetchTemplate('src/html/stats.html')
-			.then(() => {
-				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('homepage'), this.homePage, this));
-			})
-			.catch(err => console.log('Failed to retrieve stats html content.', err));	
-	}
+	/* Modals */
 
 
-	_rulesPage() {
-		Utils.fetchTemplate('src/html/rules.html')
-			.then(() => {
-				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('homepage'), this.homePage, this));
-			})
-			.catch(err => console.log('Failed to retrieve rules html content.', err));		
-	}
-
-
-	/* Game routines */
-
-
-	_startNewGame(e) {
-		Utils.fetchTemplate('src/html/players.html')
-			.then(() => {
-				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('homepage'), this.homePage, this));
-
-				const inputs = [];
-				let players = {
-					a: [],
-					b: []
-				};
-
-				const checkInputs = () => {
-					let allFilled = true;
-					for (let i = 0; i < inputs.length; ++i) {
-						if (inputs[i].value === '') {
-							allFilled = false;
-							document.getElementById('startx').innerHTML = 'Il manque des noms de joueurs!';
-							setTimeout(() => {
-								document.getElementById('startx').innerHTML = 'Démarrer la partie';
-							}, 2000);
-							players = {
-								a: [],
-								b: []
-							};					
-							break;
-						} else {
-							players[inputs[i].name[0]].push(inputs[i].value);
-						}
-					}
-
-					if (allFilled) {
-						this._game = new BocceGame({
-							type: e.target.id,
-							players: players
-						});
-					}
-				};
-
-				// TODO create team section according to team amount (for tournament evolution)
-				for (let i = 0; i < e.target.id[0]; ++i) {
-					const element = document.createElement('DIV');
-					element.classList = 'player';
-					const label = document.createElement('P');
-					const input = document.createElement('INPUT');
-					const search = document.createElement('IMG');
-					label.innerHTML = i + 1;
-					input.type = 'text';
-					input.name = `a-${i + 1}`;
-					search.src = 'assets/img/search.svg';
-					element.appendChild(label);
-					element.appendChild(input);
-					element.appendChild(search);
-					document.getElementById('team-a').appendChild(element);
-					inputs.push(input);
-				}
-
-				for (let i = 0; i < e.target.id[0]; ++i) {
-					const element = document.createElement('DIV');
-					element.classList = 'player';
-					const label = document.createElement('P');
-					const input = document.createElement('INPUT');
-					const search = document.createElement('IMG');
-					label.innerHTML = i + 1;
-					input.type = 'text';
-					input.name = `b-${i + 1}`;
-					search.src = 'assets/img/search.svg';
-					element.appendChild(label);
-					element.appendChild(input);
-					element.appendChild(search);
-					document.getElementById('team-b').appendChild(element);
-					inputs.push(input);
-				}
-
-				this.evtsIds.push(this.evts.addEvent('click', document.getElementById('startx'), checkInputs, this));				
-			})
-			.catch(err => console.log('Failed to retrieve players html content.', err));
+	searchplayerModal() {
+		// TODO : search players in db and display in radio list
 	}
 
 
 	/* Utils */
 
 
+	fetchPageError(err) {
+		console.error('GrandeBocce : Unable to fetch HTML template.', err);
+	}
+
+
 	clearEvents() {
-		for (let i = 0; i < this.evtsIds.length; ++i) {
-			this.evts.removeEvent(this.evtsIds[i]);
-		}
+		this.evts.removeAllEvents();
+	}
+
+
+	/* Auxiliary */
+
+
+	_fillPlayerspageView(playerPerTeam) {
+		const inputs = [];
+		const fillTeamPlayers = letter => {
+			for (let i = 0; i < playerPerTeam; ++i) {
+				const player = document.createElement('DIV');
+				const label = document.createElement('P');
+				const input = document.createElement('INPUT');
+				const search = document.createElement('IMG');
+				
+				player.classList.add('player');
+				label.innerHTML = `n°${i + 1}`;
+				input.dataset.team = letter;
+				search.src = 'assets/img/search.svg';
+
+				player.appendChild(label);
+				player.appendChild(input);
+				player.appendChild(search);
+				Utils.dgid(letter).appendChild(player);
+				inputs.push(input);
+
+				this.evts.addEvent('click', search, this.searchplayerModal, this);		
+			}
+		};
+
+		const checkInput = () => {
+			const teams = {
+				A: [],
+				B: []
+			};
+			let error = false;
+			for (let i = 0; i < inputs.length; ++i) {
+				if (inputs[i].value === '') {
+					inputs[i].classList.add('error');
+					error = true;
+					Utils.dgid('subtext-header').innerHTML = 'Il manque des noms de joueurs';
+				} else {
+					teams[inputs[i].dataset.team].push(inputs[i].value);
+				}
+			}
+
+			if (!error) {
+				Utils.dgid('subtext-header').innerHTML = '';
+				this._game = new BocceGame(teams);
+			}
+		};
+
+		fillTeamPlayers('A');
+		fillTeamPlayers('B');
+
+		this.evts.addEvent('click', Utils.dgid('startx'), checkInput, this);
 	}
 
 

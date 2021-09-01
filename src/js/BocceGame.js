@@ -4,209 +4,190 @@ import Utils from './Utils';
 class BocceGame {
 
 
-	constructor(options) {
-		this._type = options.type;
+	constructor(teams) {
 		this._menes = [];
-
-		this._teamA = [];
-		this._teamB = [];
-		// The true game score
-		this._scoreA = 0;
-		this._scoreB = 0;
-		// The temp game score (while players still have bowls)
-		this._tmpScoreA = 0;
-		this._tmpScoreB = 0;
+		this._teams = {
+			A: { score: 0, players: [] },
+			B: { score: 0, players: [] }
+		};
 
 		this._startingTeam = 0;
 		this._bowlsPerPlayer = 0;
 		this._remainingBowls = 0;
 
-		this._init(options);
-	}
+		this._meneScoreA = 0;
+		this._meneScoreB = 0;
+		this._gameStats = {
+			menes: null,
+			start: null,
+			end: null,
+			winner: '',
+			scoreA: 0,
+			scoreB: 0
+		};
 
-
-	_init(options) {
-		this._startingTeam = (Math.floor(Math.random() * 10) > 4) ? 1 : 2;		
-		this._bowlsPerPlayer = (this._type === '3v3') ? 2 : 3;
-		this._remainingBowls = ((2 * options.players.a.length) * this._bowlsPerPlayer);
-
-		for (let i = 0; i < options.players.a.length; ++i) {
-			this._teamA.push({
-				name: options.players.a[i],
-				team: 'A',
-				stats: {
-					score: 0,
-					boom: 0,
-					kiss: 0,
-					miss: 0
-				}
-			});
-
-			this._teamB.push({
-				name: options.players.b[i],
-				team: 'B',
-				stats: {
-					score: 0,
-					boom: 0,
-					kiss: 0,
-					miss: 0
-				}
-			});
-		}
-
-		this._quickRulesView().then(this._newMene.bind(this));
-	}
-
-
-	_quickRulesView() {
-		return new Promise(resolve => {
-			const oldStyle = window.Bocce.scene.style;
-
-			window.Bocce.scene.style = 'align-items:center;display:flex;font-size:1.1rem;height:100vh;justify-content:center;padding:1rem;text-align:center;';
-			window.Bocce.scene.innerHTML = `Que chaque joueur se munisse de ${this._bowlsPerPlayer} boules. C'est à l'équipe ${this._startingTeam} de commencer, plus précisément de lancer le but et sa première boule.`;
-
-			setTimeout(() => {
-				window.Bocce.scene.style = oldStyle;
-				resolve();
-			}, 6000);
+		this._init(teams);
+		this.drawstarterView().then(() => {
+			this._gameStats.start = Date.now();
+			this.newMene();
 		});
 	}
 
 
-	_quickMeneReview() {
+	_init(teams) {
+		this._startingTeam = (Math.floor(Math.random() * 10) > 4) ? 'A' : 'B';
+		this._bowlsPerPlayer = (teams.A.length === 3) ? 2 : 3;
+
+		for (let i = 0; i < teams.A.length; ++i) {
+			this._teams.A.players.push({
+				name: teams.A[i],
+				team: 'A',
+				stats: {
+					boom: 0, // Bowls that air-striked another on the field
+					kiss: 0, // Bowls that kissed the  but on the field
+					score: 0, // Point taken to the rival team during the mene 
+					miss: 0, // Missed bowls that were wasted
+					takenPoints: 0 // Point actually marked at the end of a mene
+				}
+			});
+			this._teams.B.players.push({
+				name: teams.B[i],
+				team: 'B',				
+				stats: {
+					boom: 0, // Bowls that air-striked another on the field
+					kiss: 0, // Bowls that kissed the  but on the field
+					score: 0, // Point taken to the rival team during the mene 
+					miss: 0, // Missed bowls that were wasted
+					takenPoints: 0 // Point actually marked at the end of a mene
+				}
+			});			
+		}
+	}
+
+
+	endGame() {
 		return new Promise(resolve => {
-			const oldStyle = window.Bocce.scene.style;
-			window.Bocce.scene.innerHTML = '';
-
-			const stats = this._menes[this._menes.length - 1];
-			const winning = (stats.meneWinner === 'A') ? 1 : 2;
-			const winScore = stats[`meneScore${stats.meneWinner}`];
-			const loseScore = stats[`meneScore${(stats.meneWinner === 'A') ? 'B' : 'A'}`];
-			const head = document.createElement('P');
-			const body = document.createElement('P');
-
-			window.Bocce.scene.style = 'align-items:center;display:flex;flex-direction:column;font-size:1.1rem;height:100vh;justify-content:center;padding:1rem;text-align:center;';
-			head.style = 'font-size:1.1rem;margin-bottom:1rem;';
-			head.innerHTML = `C'est l'équipe ${winning} qui emporte la mène, sur un score de ${winScore} à ${loseScore} et qui a l'honneur de démarrer la mène suivante. Le score de la partie est actuellement de ${stats.totalScoreA} à ${stats.totalScoreB}.`;
-
-			body.style = 'font-size:1.1rem;';
-			if (winScore === 5 || winScore === 6) {
-				body.innerHTML = `L'équipe ${winning} à infligé une valise (la bonne valoche des famille) à l'équipe adverse, en marquant ${winScore} points contre elle.`;
-			} else if (winScore === 4) {
-				body.innerHTML = `L'équipe ${winning} à infligé un sac à main à l'équipe adverse en marquant 4 points contre elle.`;
-			} else if (winScore === 3) {
-				body.innerHTML = `L'équipe ${winning} à infligé un portefeuille à l'équipe adverse en marquant 3 points contre elle.`;
-			} else {
-				body.innerHTML = `Rien n'est joué, la partie réserve encore ses surpises. À vos boules, prêt, pastis!`;
-			}
-
-			window.Bocce.scene.appendChild(head);
-			window.Bocce.scene.appendChild(body);
-
-			setTimeout(() => {
-				window.Bocce.scene.style = oldStyle;
-				resolve();
-			}, 6000);
+			Utils.fetchTemplate('assets/html/game/endgame.html', 'end-game')
+				.then(() => {
+					Utils.dgid('text-header').innerHTML = 'Fin de partie';
+					Utils.dgid('subtext-header').innerHTML = '';
+					Utils.dgid('game-winner').innerHTML = `C'est l'équipe ${this._gameStats.winner} qui remporte cette partie.`;
+					Utils.dgid('game-score').innerHTML = `Le score final de cette rencontre est de ${this._gameStats.scoreA} à ${this._gameStats.scoreB}.`;
+					Utils.dgid('game-time').innerHTML = `Ce match acharné à pris ${Utils.secondsToTimecode((this._gameStats.end - this._gameStats.start) / 1000)} pour atteindre son terme.`;
+					window.Bocce.evts.addEvent('click', Utils.dgid('homepage'), window.Bocce.homepageView, window.Bocce);
+					resolve();
+				}).catch(window.Bocce.fetchPageError);
 		});		
 	}
 
 
-	_newMene() {
-		Utils.fetchTemplate('src/html/mene.html')
-			.then(() => {
-				document.getElementById('mene-number').innerHTML = `<b>Mène n°${this._menes.length + 1}</b>`;
-				document.getElementById('starting-team').innerHTML = `C'est à l'équipe ${this._startingTeam} de démarrer la mène.`;
-				// Update score at begining of mene
-				document.getElementById('scoreA').innerHTML = this._scoreA;
-				document.getElementById('scoreB').innerHTML = this._scoreB;
-
-				for (let i = 0; i < this._teamA.length; ++i) {
-					this._addPlayer('team-a', this._teamA[i]);
-				}
-
-				for (let i = 0; i < this._teamB.length; ++i) {
-					this._addPlayer('team-b', this._teamB[i]);
-				}
-
-				if (this._startingTeam === 1) {
-					document.getElementById('team-b').classList.add('disabled');
-				} else {
-					document.getElementById('team-a').classList.add('disabled');
-				}
-				
-				document.getElementById('bowls-remaining-a').innerHTML = this._remainingBowls / 2;
-				document.getElementById('bowls-remaining-b').innerHTML = this._remainingBowls / 2;
-				window.Bocce.evtsIds.push(window.Bocce.evts.addEvent('click', document.getElementById('endx'), this._endMene, this));
-			})
-			.catch(err => console.log('Failed to retrieve home html content.', err));
+	drawstarterView() {
+		return new Promise(resolve => {
+			Utils.fetchTemplate('assets/html/game/drawstarter.html', 'draw-starter')
+				.then(() => {
+					Utils.dgid('text-header').innerHTML = 'Tirage au sort';
+					setTimeout(() => Utils.dgid('draw-starter').innerHTML = `L'équipe ${this._startingTeam}`, 1000);
+					setTimeout(() => Utils.dgid('late1').style.opacity = 1, 3500);
+					setTimeout(() => Utils.dgid('late2').style.opacity = 1, 5000);
+					setTimeout(resolve, 6500);
+				}).catch(window.Bocce.fetchPageError);
+		});
 	}
 
 
-	_endMene() {
-		window.Bocce.clearEvents();
+	newMene() {
+		return new Promise(resolve => {
+			Utils.fetchTemplate('assets/html/game/mene.html', 'mene')
+				.then(() => {
+					Utils.dgid('text-header').innerHTML = `${this._teams.A.score} — ${this._teams.B.score}`;
+					Utils.dgid('subtext-header').innerHTML = `Mène n°${this._menes.length + 1}`;
 
-		const meneStats = {
-			totalScoreA: 0,
-			totalScoreB: 0,
-			meneScoreA: this._tmpScoreA,
-			meneScoreB: this._tmpScoreB,
-			meneWinner: 0,
-			teamA: Object.assign(this._teamA, {}),
-			teamB: Object.assign(this._teamB, {})
-		};
+					this._remainingBowls = ((2 * this._teams.A.players.length) * this._bowlsPerPlayer);
+					this._meneScoreB = 0;
+					this._meneScoreA = 0;
 
-		this._remainingBowls = ((2 * this._teamA.length) * this._bowlsPerPlayer);		
-		this._scoreA += this._tmpScoreA;
-		this._scoreB += this._tmpScoreB;
+					for (let i = 0; i < this._teams.A.players.length; ++i) {
+						this._addPlayerForMene('A', this._teams.A.players[i]);
+						this._addPlayerForMene('B', this._teams.B.players[i]);
+					}
 
-		meneStats.totalScoreA = this._scoreA;
-		meneStats.totalScoreB = this._scoreB;
-		meneStats.meneWinner = (this._tmpScoreA > this._tmpScoreB) ? 'A' : 'B';
+					const notStarting = (this._startingTeam === 'A') ? 'B' : 'A';	
+					Utils.dgid(notStarting).classList.add('disabled');
+					Utils.dgid('bowls-remaining-A').innerHTML = this._remainingBowls / 2;
+					Utils.dgid('bowls-remaining-B').innerHTML = this._remainingBowls / 2;
 
-		this._tmpScoreA = 0;
-		this._tmpScoreB = 0;
+					window.Bocce.evts.addEvent('click', Utils.dgid('cancel-mene'), this.endMene.bind(this, true));
 
-		if (this._scoreA > this._scoreB) {
-			this._startingTeam = 1;
-		} else {
-			this._startingTeam = 2;
-		}
-
-		this._menes.push(meneStats);
-		if (this._scoreA >= 13 || this._scoreB >= 13) {
-			this._endGame();
-		}	else {
-			this._quickMeneReview().then(this._newMene.bind(this));
-		}
+					resolve();
+				}).catch(window.Bocce.fetchPageError);
+		});
 	}
 
 
-	_endGame() {
-		Utils.fetchTemplate('src/html/endgame.html')
-			.then(() => {
-				const head = document.createElement('P');
-				const body = document.createElement('P');
-				const stats = this._menes[this._menes.length - 1];
-				const winnerLetter = (stats.totalScoreA > stats.totalScoreB) ? 'A' : 'B';
-				const looserLetter = (winnerLetter === 'A') ? 'B' : 'A';
-				const winnerNumber = (winnerLetter === 'A') ? 1 : 2;
+	endMene(tie) {
+		return new Promise(resolve => {
+			Utils.fetchTemplate('assets/html/game/endmene.html', 'end-mene')
+				.then(() => {
+					Utils.dgid('subtext-header').innerHTML = '';
+					// Reset tmp score and wait for user events to fill 'em
+					this._meneScoreB = 0;
+					this._meneScoreA = 0;
 
-				head.innerHTML = `C'est l'équipe ${winnerNumber} qui remporte la partie sur un score de ${stats[`totalScore${winnerLetter}`]} à ${stats[`totalScore${looserLetter}`]}.`;
+					for (let i = 0; i < this._teams.A.players.length; ++i) {
+						this._addPlayerForEndMene('A', this._teams.A.players[i]);
+						this._addPlayerForEndMene('B', this._teams.B.players[i]);
+					}
 
-				if (stats[`totalScore${looserLetter}`] === 0) {
-					body.innerHTML = `En pétanque, pour une fessée pareille, on dit que les perdants se sont prix une Fanny. À vous donc de payer votre coup à boire au gagnant, c'est la tradition !`;
-				} else {
-					body.innerHTML = `Ce fût une partie intense, sachez maintenant que chaque joueur à vu sa fiche de statistiques mise à jour avec les données de cette partie. N'hésitez pas à consulter le tableau des scores, ou refaites une partie!`;					
-				}
+					const meneStats = {
+						scoreA: 0,
+						scoreB: 0,
+						meneWinner: '-',
+						teamA: JSON.parse(JSON.stringify(this._teams.A)),
+						teamB: JSON.parse(JSON.stringify(this._teams.B))
+					};
 
-				document.getElementById('endgame').appendChild(head);
-				document.getElementById('endgame').appendChild(body);
-				window.Bocce.evtsIds.push(window.Bocce.evts.addEvent('click', document.getElementById('homepage'), window.Bocce.homePage, window.Bocce));				
-			});
+					if (tie) {
+						Utils.dgid('text-header').innerHTML = 'Mène nulle';
+						Utils.dgid('A').classList.add('disabled');
+						Utils.dgid('B').classList.add('disabled');					
+						Utils.dgid('referee-help').innerHTML = 'Cette mène est comptabilisée comme nulle. La mène suivante va démarrer.';
+						meneStats.scoreA = this._teams.A.score;
+						meneStats.scoreB = this._teams.B.score;						
+						this._menes.push(meneStats);
+						setTimeout(this.newMene.bind(this), 5000);
+					} else {
+						Utils.dgid('text-header').innerHTML = 'Comptage de points';
+						const next = () => {
+							this._teams.A.score += this._meneScoreA;
+							this._teams.B.score += this._meneScoreB;
+							meneStats.scoreA = this._meneScoreA;
+							meneStats.scoreB = this._meneScoreB;
+							meneStats.meneWinner = (this._meneScoreA > this._meneScoreB) ? 'A' : 'B';
+							this._startingTeam = meneStats.meneWinner;
+							this._menes.push(meneStats);
+
+							if (this._teams.A.score >= 13 || this._teams.B.score >= 13) {
+								this._gameStats.end = Date.now();
+								this._gameStats.menes = this._menes;
+								this._gameStats.scoreA = this._teams.A.score;
+								this._gameStats.scoreB = this._teams.B.score;
+								this._gameStats.winner = (this._teams.A.score > this._teams.B.score) ? 'A' : 'B';
+								this.endGame();
+							}	else {
+								this.newMene();
+							}						
+						};
+
+						window.Bocce.evts.addEvent('click', Utils.dgid('end-mene'), next, this);
+					}
+
+					resolve();
+				}).catch(window.Bocce.fetchPageError);
+		});
 	}
 
 
-	_addPlayer(id, player) {
+	_addPlayerForMene(team, player) {
 		const element = document.createElement('DIV');
 		const playerName = document.createElement('P');
 		const boomWrapper = document.createElement('DIV');
@@ -217,6 +198,7 @@ class BocceGame {
 		const kiss = document.createElement('IMG');
 		const score = document.createElement('IMG');
 		const miss = document.createElement('IMG');
+
 		element.classList = 'player';
 		playerName.innerHTML = player.name;
 		boomWrapper.dataset.value = 0;
@@ -225,7 +207,7 @@ class BocceGame {
 		missWrapper.dataset.value = 0;
 		boom.src = 'assets/img/boom.svg';
 		kiss.src = 'assets/img/kiss.svg';
-		score.src = 'assets/img/score.svg';
+		score.src = 'assets/img/point.svg';
 		miss.src = 'assets/img/miss.svg';
 
 		element.appendChild(playerName);
@@ -251,28 +233,51 @@ class BocceGame {
 		const addScore = () => {
 			scoreWrapper.dataset.value = parseInt(scoreWrapper.dataset.value) + 1;
 			player.stats.score += 1;
-			this._updateScore(player.team);
+
+			if (player.team === 'A' && this._meneScoreA < this._meneScoreB) {
+				this._meneScoreB = 0;
+				this._meneScoreA = 1;
+				Utils.dgid('A').classList.add('disabled');
+				Utils.dgid('B').classList.remove('disabled');
+			} else if (player.team === 'B' && this._meneScoreB < this._meneScoreA) {
+				this._meneScoreB = 1;
+				this._meneScoreA = 0;
+				Utils.dgid('A').classList.remove('disabled');
+				Utils.dgid('B').classList.add('disabled');
+			} else {
+				const oppositeMarking = (player.team === 'A') ? 'B' : 'A';
+				const oppositeBowls = parseInt(Utils.dgid(`bowls-remaining-${oppositeMarking}`).innerHTML);			
+				this[`_meneScore${player.team}`] += 1;
+				if (oppositeBowls > 0) {
+					Utils.dgid(player.team).classList.add('disabled');
+					Utils.dgid(oppositeMarking).classList.remove('disabled');
+				}
+			}
+			// Update remaining bowls for marking team
+			const remaining = parseInt(Utils.dgid(`bowls-remaining-${player.team}`).innerHTML) - 1;
+			Utils.dgid(`bowls-remaining-${player.team}`).innerHTML = remaining;
 
 			if (parseInt(scoreWrapper.dataset.value) + parseInt(missWrapper.dataset.value) === this._bowlsPerPlayer) {
 				element.classList.add('disabled');
+			}
+
+			--this._remainingBowls;
+			if (this._remainingBowls === 0) {
+				this.endMene();
 			}
 		};
 
 		const addMissed = () => {
 			const oppositeMarking = (player.team === 'A') ? 'B' : 'A';			
-			const marking = (player.team === 'A') ? 1 : 2;
-			const toPlay = (player.team === 'A') ? 2 : 1;
 			missWrapper.dataset.value = parseInt(missWrapper.dataset.value) + 1;
 			player.stats.miss += 1;
 
-			document.getElementById('starting-team').innerHTML = `L'équipe ${marking} échoue misérablement. Jouez à nouveau.`;			
-			const remaining = parseInt(document.getElementById(`bowls-remaining-${player.team.toLowerCase()}`).innerHTML) - 1;
-			document.getElementById(`bowls-remaining-${player.team.toLowerCase()}`).innerHTML = remaining;
+			const remaining = parseInt(Utils.dgid(`bowls-remaining-${player.team}`).innerHTML) - 1;
+			Utils.dgid(`bowls-remaining-${player.team}`).innerHTML = remaining;
 
 			if (remaining === 0) {
-				document.getElementById('starting-team').innerHTML = `L'équipe ${marking} n'à plus de boules. À l'équipe ${toPlay} de jouer.`;
-				document.getElementById(`team-${player.team.toLowerCase()}`).classList.add('disabled');
-				document.getElementById(`team-${oppositeMarking.toLowerCase()}`).classList.remove('disabled');			
+				Utils.dgid(player.team).classList.add('disabled');
+				Utils.dgid(oppositeMarking).classList.remove('disabled');			
 			}
 
 			if (parseInt(scoreWrapper.dataset.value) + parseInt(missWrapper.dataset.value) === this._bowlsPerPlayer) {
@@ -281,71 +286,52 @@ class BocceGame {
 
 			--this._remainingBowls;
 			if (this._remainingBowls === 0) {
-				this._endMene();
+				this.endMene();
 			}
-		};		
+		};			
 
-		window.Bocce.evtsIds.push(window.Bocce.evts.addEvent('click', boom, addBoom, boom));
-		window.Bocce.evtsIds.push(window.Bocce.evts.addEvent('click', kiss, addKiss, kiss));
-		window.Bocce.evtsIds.push(window.Bocce.evts.addEvent('click', score, addScore, score));
-		window.Bocce.evtsIds.push(window.Bocce.evts.addEvent('click', miss, addMissed, miss));
+		window.Bocce.evts.addEvent('click', boom, addBoom, boom);
+		window.Bocce.evts.addEvent('click', score, addScore, score);
+		window.Bocce.evts.addEvent('click', kiss, addKiss, kiss);
+		window.Bocce.evts.addEvent('click', miss, addMissed, miss);
 
-		document.getElementById(id).appendChild(element);		
+		Utils.dgid(team).appendChild(element);
 	}
 
 
-	_updateScore(markingTeam) {
-		// Team A take the point
-		if (markingTeam === 'A' && this._tmpScoreA < this._tmpScoreB) {
-			document.getElementById('starting-team').innerHTML = `L'équipe 1 prends le point. À l'équipe 2 de jouer.`;
-			this._tmpScoreB = 0;
-			this._tmpScoreA = 1;
-			document.getElementById('team-a').classList.add('disabled');
-			document.getElementById('team-b').classList.remove('disabled');
-		} else if (markingTeam === 'B' && this._tmpScoreB < this._tmpScoreA) {
-			document.getElementById('starting-team').innerHTML = `L'équipe 2 prends le point. À l'équipe 1 de jouer.`;
-			this._tmpScoreB = 1;
-			this._tmpScoreA = 0;
-			document.getElementById('team-a').classList.remove('disabled');
-			document.getElementById('team-b').classList.add('disabled');
-		} else if (this._tmpScoreA === this._tmpScoreB) {
-			const oppositeMarking = (markingTeam === 'A') ? 'B' : 'A';
-			const oppositeBowls = parseInt(document.getElementById(`bowls-remaining-${oppositeMarking.toLowerCase()}`).innerHTML);			
-			const marking = (markingTeam === 'A') ? 1 : 2;
-			const toPlay = (markingTeam === 'A') ? 2 : 1;
-			document.getElementById('starting-team').innerHTML = `L'équipe ${marking} prends le point. À l'équipe ${toPlay} de jouer.`;
-			this[`_tmpScore${markingTeam}`] += 1;
-			if (oppositeBowls > 0) {
-				document.getElementById(`team-${markingTeam.toLowerCase()}`).classList.add('disabled');
-				document.getElementById(`team-${oppositeMarking.toLowerCase()}`).classList.remove('disabled');
-			}	else {
-				document.getElementById('starting-team').innerHTML = `L'équipe ${marking} enfonce le clou.`;				
-			}
-		} else {
-			const oppositeMarking = (markingTeam === 'A') ? 'B' : 'A';
-			const oppositeBowls = parseInt(document.getElementById(`bowls-remaining-${oppositeMarking.toLowerCase()}`).innerHTML);
-			const marking = (markingTeam === 'A') ? 1 : 2;
-			const toPlay = (markingTeam === 'A') ? 2 : 1;
-			document.getElementById('starting-team').innerHTML = `L'équipe ${marking} creuse l'écart. À l'équipe ${toPlay} de jouer.`;			
-			this[`_tmpScore${markingTeam}`] += 1;
-			if (oppositeBowls > 0) {
-				document.getElementById(`team-${markingTeam.toLowerCase()}`).classList.add('disabled');
-				document.getElementById(`team-${oppositeMarking.toLowerCase()}`).classList.remove('disabled');
-			} else {
-				document.getElementById('starting-team').innerHTML = `L'équipe ${marking} enfonce le clou.`;				
-			}
-		}
-		// Update remaining bowls for marking team
-		const remaining = parseInt(document.getElementById(`bowls-remaining-${markingTeam.toLowerCase()}`).innerHTML) - 1;
-		document.getElementById(`bowls-remaining-${markingTeam.toLowerCase()}`).innerHTML = remaining;
-		// Update score at begining of mene
-		document.getElementById('scoreA').innerHTML = this._scoreA + this._tmpScoreA;
-		document.getElementById('scoreB').innerHTML = this._scoreB + this._tmpScoreB;
+	_addPlayerForEndMene(team, player) {
+		const element = document.createElement('DIV');
+		const playerName = document.createElement('P');
+		const pointWrapper = document.createElement('DIV');
+		const point = document.createElement('IMG');
 
-		--this._remainingBowls;
-		if (this._remainingBowls === 0) {
-			this._endMene();
-		}
+		element.classList = 'player';
+		playerName.innerHTML = player.name;
+		pointWrapper.dataset.value = 0;
+		point.src = 'assets/img/score.svg';
+
+		element.appendChild(playerName);
+		pointWrapper.appendChild(point);
+		element.appendChild(pointWrapper);
+
+		const addPoint = () => {
+			const oppositeMarking = (player.team === 'A') ? 'B' : 'A';
+			if (parseInt(pointWrapper.dataset.value) + 1 <= this._bowlsPerPlayer) {
+				pointWrapper.dataset.value = parseInt(pointWrapper.dataset.value) + 1;
+				player.stats.takenPoints += 1;
+				this[`_meneScore${player.team}`] += 1;
+				Utils.dgid(oppositeMarking).classList.add('disabled');
+				if (player.stats.takenPoints === this._bowlsPerPlayer) {
+					element.classList.add('disabled');
+				}
+			} else {
+				element.classList.add('disabled');
+			}
+		};
+
+		window.Bocce.evts.addEvent('click', point, addPoint, point);
+
+		Utils.dgid(team).appendChild(element);		
 	}
 
 
